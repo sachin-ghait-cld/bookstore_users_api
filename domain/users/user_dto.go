@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	// StatusActive Status of user
 	StatusActive = "active"
 )
 
@@ -20,6 +21,9 @@ type User struct {
 	Status      string `json:"status"`
 	Password    string `json:"password"`
 }
+
+// Users Users list
+type Users []User
 
 // Validate user
 func (user *User) Validate() *errors.RestErr {

@@ -1,10 +1,12 @@
 package user
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sachin-ghait-cld/bookstore_oauth-go/oauth"
 	"github.com/sachin-ghait-cld/bookstore_users_api/domain/users"
 	"github.com/sachin-ghait-cld/bookstore_users_api/services"
 	"github.com/sachin-ghait-cld/bookstore_users_api/utils/errors"
@@ -29,7 +31,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result, saveErr := services.CreateUser(user)
+	result, saveErr := services.UserService.CreateUser(user)
 	if saveErr != nil {
 		c.JSON(saveErr.Status, saveErr)
 		return
@@ -39,17 +41,25 @@ func CreateUser(c *gin.Context) {
 
 // GetUser Gets a User
 func GetUser(c *gin.Context) {
+	if err := oauth.AuthenticateRequest(c.Request); err != nil {
+		c.JSON(err.Status, err)
+	}
 	userID, userErr := getUserID(c.Param("user_id"))
 	if userErr != nil {
 		c.JSON(http.StatusNotFound, userErr)
 		return
 	}
-	user, getErr := services.GetUser(userID)
+	user, getErr := services.UserService.GetUser(userID)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	fmt.Println(oauth.GetCallerID(c.Request), user.ID)
+	if oauth.GetCallerID(c.Request) == user.ID {
+		c.JSON(http.StatusOK, user.Marshall(false))
+		return
+	}
+	c.JSON(http.StatusOK, user.Marshall(oauth.IsPublic(c.Request)))
 }
 
 // UpdateUser Update a User
@@ -69,7 +79,7 @@ func UpdateUser(c *gin.Context) {
 	user.ID = userID
 	isPartial := c.Request.Method == http.MethodPatch
 
-	result, updateErr := services.UpdateUser(isPartial, user)
+	result, updateErr := services.UserService.UpdateUser(isPartial, user)
 	if updateErr != nil {
 		c.JSON(updateErr.Status, updateErr)
 		return
@@ -85,7 +95,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if deleteErr := services.DeleteUser(userID); deleteErr != nil {
+	if deleteErr := services.UserService.DeleteUser(userID); deleteErr != nil {
 		c.JSON(deleteErr.Status, deleteErr)
 		return
 	}
@@ -96,10 +106,27 @@ func DeleteUser(c *gin.Context) {
 // Search Finds a User by status
 func Search(c *gin.Context) {
 	status := c.Query("status")
-	users, err := services.Search(status)
+	users, err := services.UserService.SearchUser(status)
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
-	c.JSON(http.StatusOK, users)
+	c.JSON(http.StatusOK, users.Marshall(oauth.IsPublic(c.Request)))
+}
+
+// LoginUser Login User
+func LoginUser(c *gin.Context) {
+	var r users.LoginRequest
+	if err := c.ShouldBindJSON(&r); err != nil {
+		restErr := errors.NewBadRequestError("Invalid JSON body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	user, loginErr := services.UserService.LoginUser(r)
+	if loginErr != nil {
+		c.JSON(loginErr.Status, loginErr)
+		return
+	}
+	c.JSON(http.StatusOK, user.Marshall(oauth.IsPublic(c.Request)))
 }
