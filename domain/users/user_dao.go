@@ -6,8 +6,8 @@ import (
 
 	"github.com/sachin-ghait-cld/bookstore_users_api/datasources/mysql/users_db"
 	"github.com/sachin-ghait-cld/bookstore_users_api/logger"
-	"github.com/sachin-ghait-cld/bookstore_users_api/utils/errors"
 	"github.com/sachin-ghait-cld/bookstore_users_api/utils/mysql_utils"
+	"github.com/sachin-ghait-cld/bookstore_utils-go/rest_errors"
 )
 
 const (
@@ -22,10 +22,10 @@ const (
 var userDB = make(map[int64]*User)
 
 // Save saves a user
-func (user *User) Save() *errors.RestErr {
+func (user *User) Save() *rest_errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryInsertUser)
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		return rest_errors.NewInternalServerError("Error preparing get user query", err)
 	}
 	// result,err:= users_db.Client.Exec(queryInsertUser,user.FirstName, user.LastName, user.Email, user.DateCreated)
 
@@ -45,11 +45,11 @@ func (user *User) Save() *errors.RestErr {
 }
 
 // Get get a user
-func (user *User) Get() *errors.RestErr {
+func (user *User) Get() *rest_errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryGetUser)
 	if err != nil {
 		logger.Error("Error in Prepare query", err)
-		return errors.NewInternalServerError("database error")
+		return rest_errors.NewInternalServerError("database error", err)
 	}
 	defer stmt.Close()
 
@@ -62,10 +62,10 @@ func (user *User) Get() *errors.RestErr {
 }
 
 // Update a user
-func (user *User) Update() *errors.RestErr {
+func (user *User) Update() *rest_errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryUpdateUser)
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		return rest_errors.NewInternalServerError("error preparing update user query", err)
 	}
 	defer stmt.Close()
 	_, updateErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.ID)
@@ -77,10 +77,10 @@ func (user *User) Update() *errors.RestErr {
 }
 
 // Delete a user
-func (user *User) Delete() *errors.RestErr {
+func (user *User) Delete() *rest_errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryDeleteUser)
 	if err != nil {
-		return errors.NewInternalServerError(err.Error())
+		return rest_errors.NewInternalServerError("Error preparing delete user query", err)
 	}
 	defer stmt.Close()
 	_, deleteErr := stmt.Exec(user.ID)
@@ -92,15 +92,15 @@ func (user *User) Delete() *errors.RestErr {
 }
 
 // Search Find User By Status
-func (user *User) Search(status string) ([]User, *errors.RestErr) {
+func (user *User) Search(status string) ([]User, *rest_errors.RestErr) {
 	stmt, err := users_db.Client.Prepare(queryFindByStutus)
 	if err != nil {
-		return nil, errors.NewInternalServerError(err.Error())
+		return nil, rest_errors.NewInternalServerError("error in preparing user search query", err)
 	}
 	defer stmt.Close()
 	rows, err := stmt.Query(status)
 	if err != nil {
-		return nil, errors.NewInternalServerError(err.Error())
+		return nil, rest_errors.NewInternalServerError("Error in finding users from DB", err)
 	}
 	defer rows.Close()
 	result := make([]User, 0)
@@ -112,24 +112,24 @@ func (user *User) Search(status string) ([]User, *errors.RestErr) {
 		result = append(result, user)
 	}
 	if len(result) == 0 {
-		return nil, errors.NewNotFoundError(fmt.Sprintf("No users matching status %s", status))
+		return nil, rest_errors.NewNotFoundError(fmt.Sprintf("No users matching status %s", status))
 	}
 	return result, nil
 }
 
 // FindByEmailAndPassword get a user by email ans password
-func (user *User) FindByEmailAndPassword() *errors.RestErr {
+func (user *User) FindByEmailAndPassword() *rest_errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryFindByEmailAndPassword)
 	if err != nil {
 		logger.Error("Error in Prepare query", err)
-		return errors.NewInternalServerError("database error")
+		return rest_errors.NewInternalServerError("database error", err)
 	}
 	defer stmt.Close()
 
 	result := stmt.QueryRow(user.Email, user.Password, StatusActive)
 	if getErr := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated, &user.Status); getErr != nil {
 		if strings.Contains(getErr.Error(), mysql_utils.ErrorNoRows) {
-			return errors.NewInternalServerError("no user found")
+			return rest_errors.NewInternalServerError("no user found", getErr)
 		}
 		return mysql_utils.ParseError(getErr)
 	}
