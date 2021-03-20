@@ -50,6 +50,8 @@ github.com/sachin-ghait-cld/bookstore_oauth-go v0.0.0-20210313183237-5201705dfa8
 github.com/sachin-ghait-cld/bookstore_oauth-go v0.0.0-20210313183237-5201705dfa84/go.mod h1:iNKdiK6w6fw3JA3N8PbnSXJaJBrOgLo8LtYBEiZELgA=
 github.com/sachin-ghait-cld/bookstore_utils-go v0.0.0-20210314172241-534b362b7939 h1:wb//dwzxyRATdQvbDP/v2Hsf/yZO8m11qMJ4AdrtbfE=
 github.com/sachin-ghait-cld/bookstore_utils-go v0.0.0-20210314172241-534b362b7939/go.mod h1:1Y6ce8BqxtlHVoShBvTC626oC+Aff/VAZhpbxiFOOmU=
+github.com/sachin-ghait-cld/bookstore_utils-go v0.0.0-20210320173246-0ecfa8e4c0fb h1:DrfU3YPlG/WUS+hu9x7FPiyhoqYb2tHVqyjDXni+zeo=
+github.com/sachin-ghait-cld/bookstore_utils-go v0.0.0-20210320173246-0ecfa8e4c0fb/go.mod h1:zNBt7L59xi81n3fHFuycdMOb4+sM0S0EHHae/9pHxp4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
